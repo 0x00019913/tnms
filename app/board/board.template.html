@@ -1,0 +1,20 @@
+<table class="board">
+  <tr ng-repeat="row in $ctrl.map">
+    <td ng-repeat="cell in row" class="cell cell{{cell.content}}">
+      <div
+        class="celllabel"
+        ng-show="cell.open && cell.content>0 && cell.content<9">
+        {{cell.content}}
+      </div>
+      <div
+        class="cellbutton"
+        ng-style="{'background-color': cell.color}"
+        ng-mouseenter="$ctrl.onMouseover(cell, $event)"
+        ng-mouseleave="$ctrl.onMouseout(cell, $event)"
+        ng-mousedown="$ctrl.onMousedown(cell, $event)"
+        ng-mouseup="$ctrl.onMouseup(cell, $event)"
+        ng-show="!cell.open">
+      </div>
+    </td>
+  </tr>
+</table>
