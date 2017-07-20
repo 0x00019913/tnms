@@ -1,20 +1,46 @@
-<table class="board">
-  <tr ng-repeat="row in $ctrl.map">
-    <td ng-repeat="cell in row" class="cell cell{{cell.content}}">
-      <div
-        class="celllabel"
-        ng-show="cell.open && cell.content>0 && cell.content<9">
-        {{cell.content}}
-      </div>
-      <div
-        class="cellbutton"
-        ng-style="{'background-color': cell.color}"
-        ng-mouseenter="$ctrl.onMouseover(cell, $event)"
-        ng-mouseleave="$ctrl.onMouseout(cell, $event)"
-        ng-mousedown="$ctrl.onMousedown(cell, $event)"
-        ng-mouseup="$ctrl.onMouseup(cell, $event)"
-        ng-show="!cell.open">
-      </div>
-    </td>
-  </tr>
-</table>
+<div class="boardcontainer" ng-keypress=$ctrl.keyPress($event)>
+  <div class="boardheader">
+    <div class="digital">{{$ctrl.n - $ctrl.flagCount | threedigits}}</div>
+    <div class="status" ng-show="$ctrl.state<2" ng-click="$ctrl.reset()">:)</div>
+    <div class="status" ng-show="$ctrl.state==2" ng-click="$ctrl.reset()">ಠ_ಠ</div>
+    <div class="status" ng-show="$ctrl.state==3" ng-click="$ctrl.reset()">(-‿-)</div>
+    <div class="digital">000</div>
+  </div>
+  <div class="boardframe">
+    <table class="board"
+      ng-right-click
+      ng-mouseenter="$ctrl.boardMouseover($event)"
+      ng-mouseleave="$ctrl.boardMouseout($event)">
+      <tr ng-repeat="row in $ctrl.map">
+        <td
+          ng-repeat="cell in row"
+          ng-dblclick="$ctrl.onDoubleclick(cell, $event)"
+          ng-mouseenter="$ctrl.onMouseover(cell, $event)"
+          ng-mouseleave="$ctrl.onMouseout(cell, $event)"
+          ng-mousedown="$ctrl.onMousedown(cell, $event)"
+          ng-mouseup="$ctrl.onMouseup(cell, $event)"
+          class="cell cell{{cell.content}}">
+          <div
+            class="celllabel"
+            ng-show="cell.open && cell.content>0 && cell.content<9">
+            {{cell.content}}
+          </div>
+          <div
+            class="cellbutton"
+            ng-style="{'background': cell.color}"
+            ng-show="!cell.open">
+            <div
+              class="flag"
+              ng-show="cell.flag">
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="boardfooter">
+    <div class="controls">
+      Controls: <img class="mouseicon" src="assets/mouse_white.png"></img> [R]
+    </div>
+  </div>
+</div>
