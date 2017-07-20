@@ -1,3 +1,3 @@
 'use strict';
 
-angular.module("board", []);
+angular.module("board", ["core"]);
