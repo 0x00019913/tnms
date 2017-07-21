@@ -2,9 +2,9 @@
   <div class="boardheader">
     <div class="digital">{{$ctrl.n - $ctrl.flagCount | threedigits}}</div>
     <div class="status" ng-show="$ctrl.state<2" ng-click="$ctrl.reset()">:)</div>
-    <div class="status" ng-show="$ctrl.state==2" ng-click="$ctrl.reset()">ಠ_ಠ</div>
-    <div class="status" ng-show="$ctrl.state==3" ng-click="$ctrl.reset()">(-‿-)</div>
-    <div class="digital">000</div>
+    <div class="status" ng-show="$ctrl.state==2" ng-click="$ctrl.reset()">:(</div>
+    <div class="status" ng-show="$ctrl.state==3" ng-click="$ctrl.reset()">:D</div>
+    <div class="digital">{{$ctrl.time | threedigits}}</div>
   </div>
   <div class="boardframe">
     <table class="board"
@@ -14,11 +14,11 @@
       <tr ng-repeat="row in $ctrl.map">
         <td
           ng-repeat="cell in row"
-          ng-dblclick="$ctrl.onDoubleclick(cell, $event)"
-          ng-mouseenter="$ctrl.onMouseover(cell, $event)"
-          ng-mouseleave="$ctrl.onMouseout(cell, $event)"
-          ng-mousedown="$ctrl.onMousedown(cell, $event)"
-          ng-mouseup="$ctrl.onMouseup(cell, $event)"
+          ng-dblclick="$ctrl.cellDoubleclick(cell, $event)"
+          ng-mouseenter="$ctrl.cellMouseover(cell, $event)"
+          ng-mouseleave="$ctrl.cellMouseout(cell, $event)"
+          ng-mousedown="$ctrl.cellMousedown(cell, $event)"
+          ng-mouseup="$ctrl.cellMouseup(cell, $event)"
           class="cell cell{{cell.content}}">
           <div
             class="celllabel"
