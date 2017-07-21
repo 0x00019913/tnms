@@ -14,7 +14,7 @@
 
 angular.module("board").component("board", {
   templateUrl: "board/board.template.html",
-  controller: function BoardController() {
+  controller: ["$interval", function BoardController($interval) {
     /* BASIC PARAMS */
     this.w = 30;    // width
     this.h = 16;    // height
@@ -27,12 +27,12 @@ angular.module("board").component("board", {
       3: game lost - at least one cell containing a mine is open
     */
     this.state = 0;
-    /*  VICTORY CONDITIONS
-      the number of cells the player needs to open to win
+    /* VICTORY CONDITIONS
+      the number of cells the player needs to open to win and a count of cells
+      currently open/flagged
     */
     this.targetCount = this.w*this.h - this.n;
     this.openCount = 0;
-    // used for the flag counter
     this.flagCount = 0;
     /* HANDLING MOUSE */
     this.mousedownCount = 0;
@@ -40,15 +40,20 @@ angular.module("board").component("board", {
     this.topcolor = [0x1e, 0x3f, 0x70];
     this.botcolor = [0x58, 0x90, 0xb6];
     this.highlightColor = [0x11, 0x11, 0x11];
+    /* TIMER */
+    this.timer = null;
+    this.time = 0;
+
+    var _this = this;
 
     /* CELL COLOR UTILS */
 
     // returns a color interpolated between .topcolor and .botcolor by
     // parameter t; t is assumed normalized on [0,1]
-    // returns rgb string starting with '#'
-    this.rgbLerp = function rgbLerp(t) {
-      var tc = this.topcolor;
-      var bc = this.botcolor;
+    // returns array of 3 ints [r, g, b]
+    function rgbLerp(t) {
+      var tc = _this.topcolor;
+      var bc = _this.botcolor;
       var c = [];
       for (var i=0; i<3; i++) {
         c.push(Math.round((tc[i]*t + bc[i]*(1-t))));
@@ -56,7 +61,7 @@ angular.module("board").component("board", {
       return c;
     };
     // turns an array of 3 ints into a hex color string
-    this.colorToHexStr = function colorToHexStr(c) {
+    function colorToHexStr(c) {
       var result = "#";
       for (var i=0; i<3; i++) {
         var val = c[i].toString(16);
@@ -73,30 +78,30 @@ angular.module("board").component("board", {
     // unhighlight
 
     // add two internal colors
-    this.addColor = function addColor(a, b) {
+    function addColor(a, b) {
       var result = [];
       for (var i=0; i<3; i++) result.push(a[i] + b[i]);
       return result;
     };
     // subtract two internals colors
-    this.subColor = function subColor(a, b) {
+    function subColor(a, b) {
       var result = [];
       for (var i=0; i<3; i++) result.push(a[i] - b[i]);
       return result;
     };
     // make cell's color its internal color plus highlight color
-    this.highlightCell = function highlightCell(cell) {
-      var c = this.addColor(cell.colorInternal.slice(), this.highlightColor);
-      cell.color = this.colorToHexStr(c);
+    function highlightCell(cell) {
+      var c = addColor(cell.colorInternal.slice(), _this.highlightColor);
+      cell.color = colorToHexStr(c);
     };
     // make cell's color its internal color minus highlight color
-    this.unhighlightCell = function unhighlightCell(cell) {
-      var c = this.subColor(cell.colorInternal.slice(), this.highlightColor);
-      cell.color = this.colorToHexStr(c);
+    function unhighlightCell(cell) {
+      var c = subColor(cell.colorInternal.slice(), _this.highlightColor);
+      cell.color = colorToHexStr(c);
     };
     // reset cell's color to its internal color
-    this.resetCellColor = function resetCellColor(cell) {
-      cell.color = this.colorToHexStr(cell.colorInternal);
+    function resetCellColor(cell) {
+      cell.color = colorToHexStr(cell.colorInternal);
     };
 
     // mouse handlers
@@ -110,37 +115,37 @@ angular.module("board").component("board", {
 
       if (e.which) this.mousedownCount--;
     }
-    this.onMouseover = function onMouseover(cell, e) {
+    this.cellMouseover = function cellMouseover(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
       if (!e.which) this.mousedownCount = 0;
-      if (e.which==1) this.unhighlightCell(cell);
-      else this.highlightCell(cell);
+      if (e.which==1) unhighlightCell(cell);
+      else highlightCell(cell);
     };
-    this.onMouseout = function onMouseout(cell, e) {
+    this.cellMouseout = function cellMouseout(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
-      this.resetCellColor(cell);
+      resetCellColor(cell);
     };
-    this.onMousedown = function onMousedown(cell, e) {
+    this.cellMousedown = function cellMousedown(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
       this.mousedownCount++;
 
-      this.unhighlightCell(cell);
+      unhighlightCell(cell);
+      if (e.which==3) this.rightClickCell(cell);
     };
-    this.onMouseup = function onMouseup(cell, e) {
+    this.cellMouseup = function cellMouseup(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
       if (this.mousedownCount==2) this.revealNeighbors(cell);
       this.mousedownCount--;
 
-      this.resetCellColor(cell);
+      resetCellColor(cell);
 
       if (e.which==1) this.clickCell(cell);
-      else if (e.which==3) this.rightClickCell(cell);
     };
-    this.onDoubleclick = function onDoubleclick(cell, e) {
+    this.cellDoubleclick = function cellDoubleclick(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
       this.revealNeighbors(cell);
@@ -154,7 +159,7 @@ angular.module("board").component("board", {
       for (var r=0; r<this.h; r++) {
         var row = [];
         for (var c=0; c<this.w; c++) {
-          var colorInternal = this.rgbLerp(r/this.h);
+          var colorInternal = rgbLerp(r/this.h);
           row.push({
             open: false,
             content: 0,
@@ -162,7 +167,7 @@ angular.module("board").component("board", {
             y: r,
             x: c,
             colorInternal: colorInternal,
-            color: this.colorToHexStr(colorInternal)
+            color: colorToHexStr(colorInternal)
           });
         }
         this.map.push(row);
@@ -170,7 +175,7 @@ angular.module("board").component("board", {
     };
 
     // random integer between 0 and mx, inclusive
-    this.randint = function randint(mx) {
+    function randint(mx) {
       return Math.floor(Math.random()*mx);
     };
 
@@ -205,6 +210,8 @@ angular.module("board").component("board", {
       }
       this.flagCount = 0;
       this.openCount = 0;
+      stopTimer();
+      this.time = 0;
     }
 
     // make a new game
@@ -216,8 +223,8 @@ angular.module("board").component("board", {
         var x,y;
         var invalid;
         do {
-          x = this.randint(this.w);
-          y = this.randint(this.h);
+          x = randint(this.w);
+          y = randint(this.h);
           invalid = this.map[y][x].content==9 || (Math.abs(y-ycl)<2 && Math.abs(x-xcl)<2);
         } while (invalid);
         var cell = this.map[y][x];
@@ -243,7 +250,7 @@ angular.module("board").component("board", {
       if (this.openCount==this.targetCount) {
         this.winGame();
       }
-    }
+    };
 
     // called from the mouse event handlers; this happens after a mouseup event
     // on a cell - click a cell and modify game state and board visibility
@@ -262,10 +269,22 @@ angular.module("board").component("board", {
         this.reveal(cell);
         // update state to 1 (in progress)
         this.state = 1;
+        // start the timer
+        startTimer();
       }
       else if (this.state==1) {
         this.reveal(cell);
       }
+    };
+
+    function startTimer() {
+      _this.timer = $interval(function() {
+        _this.time += 1;
+      },
+      1000);
+    }
+    function stopTimer() {
+      if (angular.isDefined(_this.timer)) $interval.cancel(_this.timer);
     }
 
     // handle right click on a cell
@@ -275,7 +294,7 @@ angular.module("board").component("board", {
       cell.flag = !cell.flag;
       if (cell.flag) this.flagCount++;
       else this.flagCount--;
-    }
+    };
 
     // invoked on an open number cell by:
     //  double-clicking, or
@@ -292,19 +311,17 @@ angular.module("board").component("board", {
         if (c.flag) flagCount++;
       });
 
-      var _this = this;
       if (flagCount==cell.content) {
         this.mapToNeighbors(cell, function(c) {
           if (!c.flag) _this.reveal(c);
         });
       }
-    }
+    };
 
     this.reveal = function reveal(cell) {
       // if cell is already open, return
       if (cell.open || cell.flag) return;
 
-      var _this = this;
       // cell contains mine; lose the game here and do nothing else
       if (cell.content==9) {
         this.loseGame();
@@ -322,12 +339,14 @@ angular.module("board").component("board", {
           if (c.content<9) _this.reveal(c);
         });
       }
-    }
+    };
 
     // player stepped on a mine - update game state and reveal all mines
     this.loseGame = function loseGame() {
       // mark game state as lost
       this.state = 2;
+
+      stopTimer();
 
       // reveal all mines
       for (var y=0; y<this.h; y++) {
@@ -336,14 +355,16 @@ angular.module("board").component("board", {
           if (cell.content==9) this.openCell(cell);
         }
       }
-    }
+    };
 
     // player opened all cells that
     this.winGame = function winGame() {
       // mark game state as won
       this.state = 3;
-    }
+
+      stopTimer();
+    };
 
     this.init();
-  }
+  }]
 });
