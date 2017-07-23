@@ -284,7 +284,6 @@ angular.module("board").component("board", {
     this.loseGame = function loseGame() {
       // mark game state as lost
       this.state = 2;
-      console.log("lose", this.state);
 
       stopTimer();
 
@@ -301,7 +300,6 @@ angular.module("board").component("board", {
     this.winGame = function winGame() {
       // mark game state as won
       this.state = 3;
-      console.log("win", this.state);
 
       stopTimer();
     };
