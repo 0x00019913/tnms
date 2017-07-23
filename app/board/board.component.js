@@ -34,12 +34,9 @@ angular.module("board").component("board", {
     this.targetCount = this.w*this.h - this.n;
     this.openCount = 0;
     this.flagCount = 0;
-    /* HANDLING MOUSE */
-    this.mousedownCount = 0;
     /* COLOR PRESETS */
     this.topcolor = [0x1e, 0x3f, 0x70];
     this.botcolor = [0x58, 0x90, 0xb6];
-    this.highlightColor = [0x11, 0x11, 0x11];
     /* TIMER */
     this.timer = null;
     this.time = 0;
@@ -71,83 +68,26 @@ angular.module("board").component("board", {
       return result;
     }
 
-    // the internal color on a cell is an array of 3 ints; these are the cell's
-    // *true* color with no highlighting
-    // the cell.color property is a hex string representing the current color;
-    // we may add or subtract our highlight color from this to highlight or
-    // unhighlight
-
-    // add two internal colors
-    function addColor(a, b) {
-      var result = [];
-      for (var i=0; i<3; i++) result.push(a[i] + b[i]);
-      return result;
-    };
-    // subtract two internals colors
-    function subColor(a, b) {
-      var result = [];
-      for (var i=0; i<3; i++) result.push(a[i] - b[i]);
-      return result;
-    };
-    // make cell's color its internal color plus highlight color
-    function highlightCell(cell) {
-      var c = addColor(cell.colorInternal.slice(), _this.highlightColor);
-      cell.color = colorToHexStr(c);
-    };
-    // make cell's color its internal color minus highlight color
-    function unhighlightCell(cell) {
-      var c = subColor(cell.colorInternal.slice(), _this.highlightColor);
-      cell.color = colorToHexStr(c);
-    };
-    // reset cell's color to its internal color
-    function resetCellColor(cell) {
-      cell.color = colorToHexStr(cell.colorInternal);
-    };
-
     // mouse handlers
-    this.boardMouseover = function boardMouseover(e) {
-      if (this.state>1) return; // no action if game won/lost
-
-      if (e.which) this.mousedownCount++;
-    }
-    this.boardMouseout = function boardMouseout(e) {
-      if (this.state>1) return; // no action if game won/lost
-
-      if (e.which) this.mousedownCount--;
-    }
-    this.cellMouseover = function cellMouseover(cell, e) {
-      if (this.state>1) return; // no action if game won/lost
-
-      if (!e.which) this.mousedownCount = 0;
-      if (e.which==1) unhighlightCell(cell);
-      else highlightCell(cell);
-    };
-    this.cellMouseout = function cellMouseout(cell, e) {
-      if (this.state>1) return; // no action if game won/lost
-
-      resetCellColor(cell);
-    };
     this.cellMousedown = function cellMousedown(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
-      this.mousedownCount++;
-
-      unhighlightCell(cell);
       if (e.which==3) this.rightClickCell(cell);
     };
     this.cellMouseup = function cellMouseup(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
-      if (this.mousedownCount==2) this.revealNeighbors(cell);
-      this.mousedownCount--;
-
-      resetCellColor(cell);
-
-      if (e.which==1) this.clickCell(cell);
+      // if we released a button while having another depressed, do the
+      // neighbor reveal for the player's convenience
+      if (e.buttons>0) this.revealNeighbors(cell);
+      // if we just unclicked the primary button, simply consider the cell
+      // clicked
+      else if (e.which==1) this.clickCell(cell);
     };
     this.cellDoubleclick = function cellDoubleclick(cell, e) {
       if (this.state>1) return; // no action if game won/lost
 
+      // neighbor reveal also triggered by double click
       this.revealNeighbors(cell);
     }
 
@@ -158,15 +98,14 @@ angular.module("board").component("board", {
       // build board
       for (var r=0; r<this.h; r++) {
         var row = [];
+        var colorInternal = rgbLerp(r/this.h);
         for (var c=0; c<this.w; c++) {
-          var colorInternal = rgbLerp(r/this.h);
           row.push({
             open: false,
             content: 0,
             flag: false,
             y: r,
             x: c,
-            colorInternal: colorInternal,
             color: colorToHexStr(colorInternal)
           });
         }
@@ -345,6 +284,7 @@ angular.module("board").component("board", {
     this.loseGame = function loseGame() {
       // mark game state as lost
       this.state = 2;
+      console.log("lose", this.state);
 
       stopTimer();
 
@@ -361,6 +301,7 @@ angular.module("board").component("board", {
     this.winGame = function winGame() {
       // mark game state as won
       this.state = 3;
+      console.log("win", this.state);
 
       stopTimer();
     };

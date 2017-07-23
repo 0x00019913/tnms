@@ -133,6 +133,19 @@ html, body {
   opacity: 1.0;
 }
 
+.cell .cellbutton .cellhighlight {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  margin: 0;
+}
+.cell .cellbutton .cellhighlight:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+.cell .cellbutton .cellhighlight:active {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
 .cell .cellbutton .flag {
   width: 100%;
   height: 100%;
