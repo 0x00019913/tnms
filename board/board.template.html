@@ -8,15 +8,11 @@
   </div>
   <div class="boardframe">
     <table class="board"
-      ng-right-click
-      ng-mouseenter="$ctrl.boardMouseover($event)"
-      ng-mouseleave="$ctrl.boardMouseout($event)">
+      ng-right-click>
       <tr ng-repeat="row in $ctrl.map">
         <td
           ng-repeat="cell in row"
           ng-dblclick="$ctrl.cellDoubleclick(cell, $event)"
-          ng-mouseenter="$ctrl.cellMouseover(cell, $event)"
-          ng-mouseleave="$ctrl.cellMouseout(cell, $event)"
           ng-mousedown="$ctrl.cellMousedown(cell, $event)"
           ng-mouseup="$ctrl.cellMouseup(cell, $event)"
           class="cell cell{{cell.content}}">
@@ -30,8 +26,12 @@
             ng-style="{'background': cell.color}"
             ng-show="!cell.open">
             <div
-              class="flag"
-              ng-show="cell.flag">
+              class="cellhighlight"
+              ng-show="$ctrl.state<2">
+              <div
+                class="flag"
+                ng-show="cell.flag">
+              </div>
             </div>
           </div>
         </td>
