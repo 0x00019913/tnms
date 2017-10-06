@@ -16,6 +16,7 @@ angular.module("board").component("board", {
   templateUrl: "board/board.template.html",
   controller: ["$interval", function BoardController($interval) {
     /* BASIC PARAMS */
+    // advanced difficulty is 30x16 with 99 mines
     this.w = 30;    // width
     this.h = 16;    // height
     this.n = 99;    // number of mines
@@ -186,7 +187,7 @@ angular.module("board").component("board", {
       this.openCount++;
 
       // if we've opened the requisite number of cells, victory!
-      if (this.openCount==this.targetCount) {
+      if (this.openCount==this.targetCount && this.state<2) {
         this.winGame();
       }
     };
